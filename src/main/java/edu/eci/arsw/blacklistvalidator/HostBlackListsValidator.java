@@ -6,6 +6,7 @@
 package edu.eci.arsw.blacklistvalidator;
 
 import edu.eci.arsw.spamkeywordsdatasource.HostBlacklistsDataSourceFacade;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
@@ -28,27 +29,44 @@ public class HostBlackListsValidator {
      * Trustworthy, and the list of the five blacklists returned.
      *
      * @param ipaddress suspicious host's IP address.
+     * @param n
      * @return Blacklists numbers where the given host's IP address was found.
+     * @throws java.lang.InterruptedException
      */
-    public List<Integer> checkHost(String ipaddress) {
+    public List<Integer> checkHost(String ipaddress, int n) throws InterruptedException {
 
         LinkedList<Integer> blackListOcurrences = new LinkedList<>();
+        
+        ArrayList<searchServers> ths = new ArrayList<>();
 
+        searchServers th;
+        
         int ocurrencesCount = 0;
+        int serversRange;
 
         HostBlacklistsDataSourceFacade skds = HostBlacklistsDataSourceFacade.getInstance();
 
         int checkedListsCount = 0;
 
-        for (int i = 0; i < skds.getRegisteredServersCount() && ocurrencesCount < BLACK_LIST_ALARM_COUNT; i++) {
-            checkedListsCount++;
-
-            if (skds.isInBlackListServer(i, ipaddress)) {
-
-                blackListOcurrences.add(i);
-
-                ocurrencesCount++;
-            }
+        if(n % 2 != 0){
+            serversRange = skds.getRegisteredServersCount() / (n + 1);
+        }else{
+            serversRange = skds.getRegisteredServersCount() / n;
+        }
+        
+        for (int i = 0; i < skds.getRegisteredServersCount(); i += serversRange) {
+            th = new searchServers(i, i + serversRange, ipaddress, blackListOcurrences);
+            ths.add(th);
+        }
+        
+        for(searchServers x : ths){
+            x.start();
+        }
+        
+        for(searchServers x : ths){
+            x.join();
+            ocurrencesCount += x.getBusquedas();
+            checkedListsCount += x.getUsedServers();
         }
 
         if (ocurrencesCount >= BLACK_LIST_ALARM_COUNT) {
