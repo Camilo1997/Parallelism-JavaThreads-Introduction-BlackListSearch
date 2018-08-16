@@ -16,7 +16,7 @@ public class Main {
     public static void main(String a[]) throws InterruptedException {
         HostBlackListsValidator hblv = new HostBlackListsValidator();
         System.out.println(Runtime.getRuntime().availableProcessors());
-        List<Integer> blackListOcurrences = hblv.checkHost("202.24.34.55", Runtime.getRuntime().availableProcessors());
+        List<Integer> blackListOcurrences = hblv.checkHost("202.24.34.55", Runtime.getRuntime().availableProcessors() * 2);
         System.out.println("The host was found in the following blacklists:" + blackListOcurrences);
     }
 
